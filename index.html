@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tout Decora — Conceito de Redesign</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>tailwind.config={theme:{extend:{colors:{cream:'#f6f0e6',sand:'#e8dcc8',sage:'#7d8a6a',olive:'#5d6a4c',ink:'#2a2622'},fontFamily:{serif:['"Cormorant Garamond"','Georgia','serif'],sans:['Inter','system-ui','sans-serif']}}}}</script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-behavior:smooth;scroll-padding-top:80px}body{background:#f6f0e6;color:#2a2622;font-family:Inter,system-ui,sans-serif}
+.fade{animation:f .5s ease both}@keyframes f{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.pulse{animation:p 2s infinite}@keyframes p{0%{box-shadow:0 0 0 0 rgba(93,106,76,.5)}70%{box-shadow:0 0 0 12px rgba(93,106,76,0)}100%{box-shadow:0 0 0 0 rgba(93,106,76,0)}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/plain" id="app-src">
+const { useState, useMemo } = React;
+
+type Shape = 'vase' | 'lamp' | 'bowl' | 'candle' | 'basket' | 'plate';
+interface Product { id: number; name: string; price: number; cat: string; tag: string; shape: Shape; tone: string; dims: string; mat: string; colors: string[]; desc: string }
+
+// Produtos de EXEMPLO — não são itens reais da Tout Decora.
+const P: Product[] = [
+  { id: 1, name: 'Vaso Cerâmica Alto', price: 189.9, cat: 'Vasos', tag: 'Lançamentos', shape: 'vase', tone: '#b9a98a', dims: '12 × 12 × 32 cm', mat: 'Cerâmica esmaltada', colors: ['Areia', 'Oliva', 'Cru'], desc: 'Silhueta esguia para flores secas ou como peça escultural isolada.' },
+  { id: 2, name: 'Pendente Linho Natural', price: 329.0, cat: 'Iluminação', tag: 'Mais vendidos', shape: 'lamp', tone: '#d8c7a5', dims: 'Ø 40 × 28 cm', mat: 'Linho e metal', colors: ['Cru', 'Grafite'], desc: 'Luz difusa e acolhedora para mesas de jantar e ambientes de estar.' },
+  { id: 3, name: 'Tigela Artesanal', price: 94.5, cat: 'Cozinha e Jantar', tag: 'Mais vendidos', shape: 'bowl', tone: '#8f9b7a', dims: 'Ø 22 × 9 cm', mat: 'Cerâmica', colors: ['Sálvia', 'Cru'], desc: 'Para servir saladas, frutas ou compor a mesa posta.' },
+  { id: 4, name: 'Vela Aromática Âmbar', price: 69.9, cat: 'Acessórios Decorativos', tag: 'Tendências', shape: 'candle', tone: '#c4a27a', dims: '8 × 8 × 10 cm', mat: 'Cera vegetal', colors: ['Âmbar'], desc: 'Detalhe discreto para aparadores e criados-mudos.' },
+  { id: 5, name: 'Cesto de Fibra Trançada', price: 139.0, cat: 'Organização', tag: 'Tendências', shape: 'basket', tone: '#b08d63', dims: '35 × 35 × 30 cm', mat: 'Fibra natural', colors: ['Natural', 'Escuro'], desc: 'Organiza mantas, brinquedos ou revistas com textura calorosa.' },
+  { id: 6, name: 'Prato Raso Cru', price: 58.0, cat: 'Cozinha e Jantar', tag: 'Lançamentos', shape: 'plate', tone: '#e2d6c0', dims: 'Ø 27 cm', mat: 'Porcelana', colors: ['Cru', 'Sálvia'], desc: 'Base neutra para compor mesas do dia a dia ou ocasiões especiais.' },
+  { id: 7, name: 'Vaso Orgânico Baixo', price: 129.9, cat: 'Vasos', tag: 'Sazonal', shape: 'vase', tone: '#9aa584', dims: '20 × 20 × 18 cm', mat: 'Cerâmica', colors: ['Sálvia', 'Areia'], desc: 'Forma arredondada que valoriza ramos simples e folhagens.' },
+  { id: 8, name: 'Luminária de Mesa Bege', price: 249.0, cat: 'Iluminação', tag: 'Sazonal', shape: 'lamp', tone: '#cdb894', dims: '25 × 25 × 40 cm', mat: 'Cúpula de tecido', colors: ['Bege', 'Oliva'], desc: 'Iluminação suave para leitura e cantos aconchegantes.' },
+];
+const CATS = ['Sala de Estar', 'Cozinha e Jantar', 'Acessórios Decorativos', 'Vasos', 'Iluminação', 'Organização'];
+const COLS = ['Lançamentos', 'Mais vendidos', 'Tendências', 'Sazonal'];
+const NAV: { l: string; sub?: string[] }[] = [
+  { l: 'Início' }, { l: 'Decoração', sub: ['Acessórios Decorativos', 'Vasos', 'Velas'] },
+  { l: 'Cozinha e Jantar', sub: ['Pratos', 'Tigelas', 'Mesa posta'] }, { l: 'Sala de Estar', sub: ['Almofadas', 'Cestos', 'Mantas'] },
+  { l: 'Iluminação', sub: ['Pendentes', 'Luminárias de mesa'] }, { l: 'Coleções', sub: COLS }, { l: 'Sobre Nós' },
+];
+const fmt = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const Ic = ({ d, s = 20 }: { d: string; s?: number }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>
+);
+const I = { cart: 'M6 6h15l-1.5 9h-12zM6 6 5 3H2M9 20h.01M18 20h.01', search: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3', menu: 'M4 6h16M4 12h16M4 18h16', x: 'M18 6 6 18M6 6l12 12', down: 'm6 9 6 6 6-6', truck: 'M1 3h15v13H1zM16 8h4l3 3v5h-7zM5 19a2 2 0 1 0 0 .01M18 19a2 2 0 1 0 0 .01', card: 'M2 5h20v14H2zM2 10h20', undo: 'M3 7v6h6M3 13a9 9 0 1 0 3-7', chat: 'M21 12a8 8 0 0 1-11.6 7L3 21l2-5.4A8 8 0 1 1 21 12z' };
+
+function Art({ shape, tone, v = 0 }: { shape: Shape; tone: string; v?: number }) {
+  const bg = ['#efe6d6', '#e6dcc8', '#f1ebe0', '#dfd3bd'][v % 4];
+  return (
+    <svg viewBox="0 0 200 200" className="w-full h-full" role="img" aria-label={shape}>
+      <rect width="200" height="200" fill={bg} /><ellipse cx="100" cy="172" rx="62" ry="7" fill="#2a2622" opacity=".12" />
+      {shape === 'vase' && <path d="M82 40h36l-4 22c22 18 24 58 6 110H80c-18-52-16-92 6-110z" fill={tone} />}
+      {shape === 'lamp' && <><path d="M100 10v70" stroke="#2a2622" strokeWidth="2" /><path d="M55 140 78 80h44l23 60z" fill={tone} /><ellipse cx="100" cy="140" rx="45" ry="7" fill="#fff" opacity=".5" /></>}
+      {shape === 'bowl' && <path d="M40 100h120c0 40-26 68-60 68s-60-28-60-68z" fill={tone} />}
+      {shape === 'candle' && <><rect x="70" y="80" width="60" height="85" rx="8" fill={tone} /><path d="M100 50c8 10 8 18 0 26-8-8-8-16 0-26z" fill="#e9a54a" /></>}
+      {shape === 'basket' && <><path d="M45 85h110l-12 80H57z" fill={tone} /><path d="M52 105h96M56 128h88" stroke="#fff" strokeOpacity=".35" strokeWidth="3" /></>}
+      {shape === 'plate' && <><ellipse cx="100" cy="115" rx="75" ry="26" fill={tone} /><ellipse cx="100" cy="112" rx="50" ry="15" fill="#fff" opacity=".4" /></>}
+    </svg>
+  );
+}
+
+function Scene({ onHot, active }: { onHot: (id: number) => void; active: number | null }) {
+  const hots = [{ id: 2, x: 50, y: 24 }, { id: 1, x: 30, y: 52 }, { id: 3, x: 62, y: 63 }, { id: 4, x: 76, y: 58 }];
+  return (
+    <div className="relative rounded-2xl overflow-hidden shadow-xl">
+      <svg viewBox="0 0 800 500" className="w-full block" role="img" aria-label="Sala de jantar ilustrativa">
+        <defs><linearGradient id="w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#efe5d2" /><stop offset="1" stopColor="#e2d4bb" /></linearGradient></defs>
+        <rect width="800" height="500" fill="url(#w)" /><rect y="390" width="800" height="110" fill="#c9b793" />
+        <rect x="80" y="70" width="140" height="190" rx="4" fill="#f9f5ec" stroke="#b9a98a" strokeWidth="6" />
+        <path d="M400 0v110" stroke="#2a2622" strokeWidth="3" /><path d="M335 195 365 110h70l30 85z" fill="#d8c7a5" />
+        <rect x="170" y="300" width="460" height="22" rx="4" fill="#8a6a46" /><rect x="200" y="322" width="16" height="130" fill="#6e5236" /><rect x="584" y="322" width="16" height="130" fill="#6e5236" />
+        <path d="M222 300l12-95h32l12 95z" fill="#b9a98a" /><path d="M420 300c0-38 120-38 120 0z" fill="#8f9b7a" />
+        <rect x="570" y="258" width="38" height="42" rx="6" fill="#c4a27a" /><path d="M589 232c6 8 6 14 0 20-6-6-6-12 0-20z" fill="#e9a54a" />
+        <rect x="640" y="150" width="110" height="140" fill="#9aa584" opacity=".35" />
+      </svg>
+      {hots.map((h) => (
+        <button key={h.id} onClick={() => onHot(h.id)} aria-label={'Ver ' + P[h.id - 1].name}
+          style={{ left: h.x + '%', top: h.y + '%' }}
+          className={'pulse absolute -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full grid place-items-center text-white text-lg ' + (active === h.id ? 'bg-ink' : 'bg-olive')}>+</button>
+      ))}
+    </div>
+  );
+}
+
+function Card({ p, open, add }: { p: Product; open: (p: Product) => void; add: (p: Product) => void }) {
+  return (
+    <div className="group fade">
+      <button onClick={() => open(p)} className="block w-full aspect-square rounded-xl overflow-hidden"><div className="w-full h-full transition duration-500 group-hover:scale-105"><Art shape={p.shape} tone={p.tone} /></div></button>
+      <p className="mt-3 text-xs text-olive uppercase tracking-widest">{p.cat}</p>
+      <h3 className="font-serif text-xl leading-tight">{p.name}</h3>
+      <div className="flex items-center justify-between mt-1">
+        <span className="font-medium">{fmt(p.price)}</span>
+        <button onClick={() => add(p)} className="text-sm px-4 py-2 rounded-full bg-ink text-cream hover:bg-olive transition">Adicionar</button>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [view, setView] = useState<'home' | 'pdp'>('home');
+  const [cur, setCur] = useState<Product>(P[0]);
+  const [cart, setCart] = useState<Record<number, number>>({});
+  const [cartOpen, setCartOpen] = useState(false);
+  const [mobile, setMobile] = useState(false);
+  const [dd, setDd] = useState<string | null>(null);
+  const [q, setQ] = useState('');
+  const [cat, setCat] = useState('Todos');
+  const [col, setCol] = useState('Lançamentos');
+  const [hot, setHot] = useState<number | null>(2);
+  const [qty, setQty] = useState(1);
+  const [color, setColor] = useState('');
+  const [img, setImg] = useState(0);
+  const [mail, setMail] = useState('');
+  const [mailMsg, setMailMsg] = useState<{ ok: boolean; t: string } | null>(null);
+
+  const add = (p: Product, n = 1) => { setCart((c) => ({ ...c, [p.id]: (c[p.id] || 0) + n })); setCartOpen(true); };
+  const open = (p: Product) => { setCur(p); setQty(1); setColor(p.colors[0]); setImg(0); setView('pdp'); window.scrollTo(0, 0); };
+  const go = (id: string) => { setView('home'); setMobile(false); setDd(null); setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }), 60); };
+  const total = Object.entries(cart).reduce((s, [id, n]) => s + P[+id - 1].price * n, 0);
+  const count = Object.values(cart).reduce((a, b) => a + b, 0);
+
+  const shown = useMemo(() => {
+    const t = q.trim().toLowerCase();
+    return P.filter((p) => (t ? (p.name + p.cat).toLowerCase().includes(t) : p.tag === col) && (cat === 'Todos' || p.cat === cat));
+  }, [q, cat, col]);
+
+  const pick = (l: string, s?: string) => {
+    if (COLS.includes(s || '')) { setCol(s as string); setCat('Todos'); go('colecoes'); }
+    else if (l === 'Início') { setView('home'); window.scrollTo(0, 0); setMobile(false); }
+    else if (l === 'Sobre Nós') go('sobre');
+    else { setCat(CATS.includes(s || l) ? (s || l) : 'Todos'); setQ(''); go('colecoes'); }
+  };
+
+  const submitMail = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail)) { setMailMsg({ ok: true, t: 'Obrigado! (Demonstração: nenhum e-mail foi enviado.)' }); setMail(''); }
+    else setMailMsg({ ok: false, t: 'Informe um e-mail válido.' });
+  };
+
+  const related = P.filter((p) => p.id !== cur.id && (p.cat === cur.cat || p.tag === cur.tag)).slice(0, 4);
+  const hp = hot ? P[hot - 1] : null;
+
+  return (
+    <div>
+      <div className="bg-olive text-cream text-center text-xs py-2 px-3">Conceito de redesign independente — produtos, preços e textos são exemplos ilustrativos</div>
+      <header className="sticky top-0 z-40 bg-cream/95 backdrop-blur border-b border-sand">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-4">
+          <button className="lg:hidden" onClick={() => setMobile(!mobile)} aria-label="Menu"><Ic d={mobile ? I.x : I.menu} /></button>
+          <button onClick={() => pick('Início')} className="font-serif text-2xl tracking-wide">Tout Decora</button>
+          <nav className="hidden lg:flex gap-6 ml-8 text-sm">
+            {NAV.map((n) => (
+              <div key={n.l} className="relative" onMouseEnter={() => n.sub && setDd(n.l)} onMouseLeave={() => setDd(null)}>
+                <button onClick={() => pick(n.l)} className="py-5 flex items-center gap-1 hover:text-olive">{n.l}{n.sub && <Ic d={I.down} s={14} />}</button>
+                {n.sub && dd === n.l && (
+                  <div className="absolute top-full left-0 bg-cream border border-sand rounded-xl shadow-lg py-2 w-52 fade">
+                    {n.sub.map((s) => <button key={s} onClick={() => pick(n.l, s)} className="block w-full text-left px-4 py-2 hover:bg-sand/60">{s}</button>)}
+                  </div>
+                )}
+              </div>
+            ))}
+          </nav>
+          <div className="ml-auto flex items-center gap-3">
+            <label className="hidden sm:flex items-center gap-2 bg-white/70 rounded-full px-3 py-1.5 border border-sand">
+              <Ic d={I.search} s={16} />
+              <input value={q} onChange={(e) => { setQ(e.target.value); if (view !== 'home') setView('home'); }} onFocus={() => go('colecoes')} placeholder="Buscar produtos" className="bg-transparent outline-none text-sm w-36" />
+            </label>
+            <button onClick={() => setCartOpen(true)} className="relative p-2" aria-label="Carrinho"><Ic d={I.cart} />{count > 0 && <span className="absolute -top-1 -right-1 bg-olive text-cream text-[10px] w-4 h-4 rounded-full grid place-items-center">{count}</span>}</button>
+          </div>
+        </div>
+        {mobile && (
+          <div className="lg:hidden border-t border-sand px-4 py-3 fade">
+            <input value={q} onChange={(e) => setQ(e.target.value)} onFocus={() => go('colecoes')} placeholder="Buscar produtos" className="w-full mb-2 bg-white/70 rounded-full px-4 py-2 text-sm border border-sand outline-none" />
+            {NAV.map((n) => (
+              <div key={n.l}><button onClick={() => (n.sub ? setDd(dd === n.l ? null : n.l) : pick(n.l))} className="w-full flex justify-between py-2">{n.l}{n.sub && <Ic d={I.down} s={14} />}</button>
+                {n.sub && dd === n.l && n.sub.map((s) => <button key={s} onClick={() => pick(n.l, s)} className="block pl-4 py-1.5 text-sm text-olive">{s}</button>)}</div>
+            ))}
+          </div>
+        )}
+      </header>
+
+      {view === 'home' ? (
+        <main>
+          <section className="relative h-[78vh] min-h-[480px] overflow-hidden">
+            <svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 w-full h-full" aria-hidden="true">
+              <rect width="800" height="500" fill="#e8dcc8" /><rect y="360" width="800" height="140" fill="#c9b793" />
+              <rect x="520" y="60" width="220" height="250" fill="#f6f0e6" stroke="#b9a98a" strokeWidth="8" /><path d="M630 60v250M520 185h220" stroke="#b9a98a" strokeWidth="5" />
+              <path d="M470 400c0-90 80-100 150-100s150 10 150 100z" fill="#8f9b7a" /><rect x="600" y="250" width="40" height="60" rx="8" fill="#b9a98a" />
+              <path d="M690 250c-30-40-10-60 10-80 10 30 25 50-10 80z" fill="#5d6a4c" />
+            </svg>
+            <div className="absolute inset-0 bg-gradient-to-r from-cream/95 via-cream/70 to-transparent" />
+            <div className="relative max-w-7xl mx-auto px-4 h-full flex items-center"><div className="max-w-xl fade">
+              <p className="text-xs uppercase tracking-[.3em] text-olive mb-4">Casa · Mesa · Luz</p>
+              <h1 className="font-serif text-5xl md:text-7xl leading-[1.02]">Transforme seu espaço, um detalhe de cada vez.</h1>
+              <p className="mt-5 text-lg text-ink/75">Descubra peças cuidadosamente selecionadas que trazem beleza, conforto e personalidade para a sua casa.</p>
+              <button onClick={() => go('colecoes')} className="mt-8 px-8 py-4 rounded-full bg-ink text-cream hover:bg-olive transition">Descubra a coleção</button>
+            </div></div>
+          </section>
+
+          <section className="max-w-7xl mx-auto px-4 py-20">
+            <h2 className="font-serif text-4xl mb-8">Compre por ambiente</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {CATS.map((c, i) => (
+                <button key={c} onClick={() => { setCat(c); setQ(''); go('colecoes'); }} className="relative aspect-[4/3] rounded-2xl overflow-hidden group text-left">
+                  <div className="absolute inset-0 transition duration-500 group-hover:scale-105"><Art shape={(['basket', 'plate', 'candle', 'vase', 'lamp', 'bowl'] as Shape[])[i]} tone={P[i].tone} v={i} /></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-ink/60 to-transparent" /><span className="absolute bottom-4 left-4 text-cream font-serif text-2xl">{c}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section id="colecoes" className="bg-sand/40 py-20"><div className="max-w-7xl mx-auto px-4">
+            <h2 className="font-serif text-4xl mb-6">{q ? 'Resultados para “' + q + '”' : 'Coleções em destaque'}</h2>
+            {!q && <div className="flex flex-wrap gap-2 mb-4">{COLS.map((c) => <button key={c} onClick={() => setCol(c)} className={'px-5 py-2 rounded-full text-sm border ' + (col === c ? 'bg-ink text-cream border-ink' : 'border-ink/20 hover:border-olive')}>{c}</button>)}</div>}
+            <div className="flex flex-wrap gap-2 mb-8">{['Todos', ...CATS].map((c) => <button key={c} onClick={() => setCat(c)} className={'px-3 py-1 rounded-full text-xs ' + (cat === c ? 'bg-olive text-cream' : 'bg-white/60')}>{c}</button>)}</div>
+            {shown.length ? <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-10">{shown.map((p) => <Card key={p.id} p={p} open={open} add={add} />)}</div> : <p className="py-10 text-ink/60">Nenhum produto de exemplo encontrado. Tente outro termo ou categoria.</p>}
+          </div></section>
+
+          <section className="max-w-7xl mx-auto px-4 py-20">
+            <div className="grid md:grid-cols-2 gap-8 items-center border border-dashed border-olive/50 rounded-2xl p-6 md:p-10">
+              <div className="aspect-[4/3] rounded-xl overflow-hidden"><Art shape="vase" tone="#9aa584" v={2} /></div>
+              <div><span className="text-xs px-3 py-1 rounded-full bg-sand">Exemplo — conteúdo a confirmar</span>
+                <h2 className="font-serif text-4xl mt-4">Recomendado para você</h2>
+                <p className="mt-3 text-ink/70">Este bloco substitui o texto genérico atual. Quando o produto real for definido pela loja, nome, imagem e preço serão preenchidos aqui.</p>
+                <p className="mt-4 font-medium">Produto de exemplo · {fmt(0)} <span className="text-sm text-ink/50">(preço a definir)</span></p>
+                <button onClick={() => open(P[0])} className="mt-5 px-6 py-3 rounded-full bg-ink text-cream hover:bg-olive transition">Ver peça de exemplo</button></div>
+            </div>
+          </section>
+
+          <section className="bg-cream pb-20"><div className="max-w-7xl mx-auto px-4">
+            <p className="text-xs uppercase tracking-[.3em] text-olive">Shop the Look</p>
+            <h2 className="font-serif text-4xl mb-8">Compre o ambiente</h2>
+            <div className="grid lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2"><Scene onHot={setHot} active={hot} /></div>
+              {hp && <div className="fade bg-white/70 rounded-2xl p-5 self-start">
+                <div className="aspect-square rounded-xl overflow-hidden"><Art shape={hp.shape} tone={hp.tone} /></div>
+                <h3 className="font-serif text-2xl mt-3">{hp.name}</h3><p className="text-sm text-ink/70">{hp.desc}</p>
+                <div className="flex justify-between items-center mt-3"><span className="font-medium">{fmt(hp.price)}</span>
+                  <div className="flex gap-2"><button onClick={() => open(hp)} className="text-sm px-3 py-2 rounded-full border border-ink/20">Detalhes</button><button onClick={() => add(hp)} className="text-sm px-4 py-2 rounded-full bg-ink text-cream">Adicionar</button></div></div>
+              </div>}
+            </div>
+          </div></section>
+
+          <section className="bg-sand/40 py-20"><div className="max-w-7xl mx-auto px-4">
+            <h2 className="font-serif text-4xl mb-8">Como usar em casa</h2>
+            <div className="grid md:grid-cols-3 gap-6">
+              {[[0, 'Na mesa de jantar', 'Combine o vaso com velas e tigelas para um centro de mesa em camadas.'], [1, 'No aparador', 'Alturas diferentes criam ritmo visual; mantenha tons terrosos.'], [3, 'Na sala de estar', 'Uma luminária suave transforma o canto de leitura.']].map(([i, t, d]) => (
+                <article key={t as string} className="bg-cream rounded-2xl overflow-hidden"><div className="aspect-[4/3]"><Art shape={P[i as number].shape} tone={P[i as number].tone} v={i as number} /></div><div className="p-5"><h3 className="font-serif text-2xl">{t}</h3><p className="text-sm text-ink/70 mt-1">{d}</p></div></article>
+              ))}
+            </div>
+          </div></section>
+
+          <section id="sobre" className="max-w-7xl mx-auto px-4 py-20">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[[I.card, 'Pagamento'], [I.truck, 'Entrega'], [I.undo, 'Trocas e devoluções'], [I.chat, 'Atendimento']].map(([d, t]) => (
+                <div key={t} className="text-center p-6 rounded-2xl border border-sand"><div className="mx-auto w-12 h-12 rounded-full bg-sand grid place-items-center text-olive"><Ic d={d} /></div>
+                  <h3 className="font-serif text-xl mt-3">{t}</h3><p className="text-sm text-ink/60 mt-1">Informações oficiais a serem fornecidas pela Tout Decora.</p></div>
+              ))}
+            </div>
+          </section>
+        </main>
+      ) : (
+        <main className="max-w-7xl mx-auto px-4 py-10 fade">
+          <button onClick={() => pick('Início')} className="text-sm text-olive mb-6">← Voltar à loja</button>
+          <div className="grid md:grid-cols-2 gap-10">
+            <div><div className="aspect-square rounded-2xl overflow-hidden"><Art shape={cur.shape} tone={cur.tone} v={img} /></div>
+              <div className="grid grid-cols-4 gap-3 mt-3">{[0, 1, 2, 3].map((v) => <button key={v} onClick={() => setImg(v)} className={'aspect-square rounded-lg overflow-hidden border-2 ' + (img === v ? 'border-olive' : 'border-transparent')}><Art shape={cur.shape} tone={cur.tone} v={v} /></button>)}</div></div>
+            <div>
+              <span className="text-xs px-3 py-1 rounded-full bg-sand">Produto de exemplo</span>
+              <h1 className="font-serif text-5xl mt-3">{cur.name}</h1><p className="text-2xl mt-2">{fmt(cur.price)}</p>
+              <p className="mt-4 text-ink/75">{cur.desc}</p>
+              <dl className="mt-5 text-sm grid grid-cols-[110px_1fr] gap-y-2"><dt className="text-ink/50">Dimensões</dt><dd>{cur.dims}</dd><dt className="text-ink/50">Material</dt><dd>{cur.mat}</dd></dl>
+              <div className="mt-5"><p className="text-sm mb-2">Cor: <b>{color}</b></p><div className="flex gap-2">{cur.colors.map((c) => <button key={c} onClick={() => setColor(c)} className={'px-4 py-2 rounded-full text-sm border ' + (color === c ? 'bg-ink text-cream border-ink' : 'border-ink/20')}>{c}</button>)}</div></div>
+              <div className="mt-6 flex gap-3 items-center">
+                <div className="flex items-center border border-ink/20 rounded-full"><button className="w-10 h-10" onClick={() => setQty(Math.max(1, qty - 1))} aria-label="Menos">−</button><span className="w-8 text-center">{qty}</span><button className="w-10 h-10" onClick={() => setQty(qty + 1)} aria-label="Mais">+</button></div>
+                <button onClick={() => add(cur, qty)} className="flex-1 py-3 rounded-full bg-ink text-cream hover:bg-olive transition">Adicionar ao carrinho</button>
+              </div>
+              <div className="mt-6 space-y-2 text-sm border-t border-sand pt-4"><p><b>Entrega:</b> prazos e frete a confirmar pela loja.</p><p><b>Trocas e devoluções:</b> política a confirmar pela loja.</p></div>
+            </div>
+          </div>
+          <h2 className="font-serif text-3xl mt-16 mb-6">Em casa</h2>
+          <p className="max-w-2xl text-ink/70">Use {cur.name.toLowerCase()} como ponto focal em uma mesa de jantar, aparador ou estante, combinando com tons de bege, madeira e verde sálvia.</p>
+          <h2 className="font-serif text-3xl mt-16 mb-6">Você também pode gostar</h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">{related.map((p) => <Card key={p.id} p={p} open={open} add={add} />)}</div>
+        </main>
+      )}
+
+      <footer className="bg-ink text-cream/80 mt-10"><div className="max-w-7xl mx-auto px-4 py-14 grid md:grid-cols-4 gap-8 text-sm">
+        <div><h3 className="font-serif text-2xl text-cream">Tout Decora</h3><p className="mt-2">Sobre a marca: texto institucional a ser fornecido pela loja.</p></div>
+        <div><h4 className="text-cream mb-2">Atendimento</h4><p>Contato: a confirmar</p><p>Envios: a confirmar</p><p>Trocas e devoluções: a confirmar</p></div>
+        <div><h4 className="text-cream mb-2">Redes sociais</h4><p>Instagram · Facebook · Pinterest</p><p className="text-cream/50">(links a confirmar)</p></div>
+        <div><h4 className="text-cream mb-2">Newsletter</h4>
+          <div className="flex gap-2"><input value={mail} onChange={(e) => setMail(e.target.value)} placeholder="seu@email.com" className="flex-1 min-w-0 rounded-full px-4 py-2 bg-cream/10 outline-none" /><button onClick={submitMail} className="px-4 rounded-full bg-sage text-ink">Assinar</button></div>
+          {mailMsg && <p className={'mt-2 ' + (mailMsg.ok ? 'text-sage' : 'text-red-300')}>{mailMsg.t}</p>}</div>
+      </div><p className="text-center text-xs text-cream/40 pb-6">Conceito independente de redesign. Não afiliado à Tout Decora.</p></footer>
+
+      {cartOpen && <div className="fixed inset-0 z-50"><div className="absolute inset-0 bg-ink/40" onClick={() => setCartOpen(false)} />
+        <aside className="absolute right-0 top-0 h-full w-full max-w-md bg-cream p-6 flex flex-col fade">
+          <div className="flex justify-between items-center mb-4"><h2 className="font-serif text-3xl">Carrinho</h2><button onClick={() => setCartOpen(false)} aria-label="Fechar"><Ic d={I.x} /></button></div>
+          <div className="flex-1 overflow-y-auto space-y-4">
+            {count === 0 && <p className="text-ink/60">Seu carrinho está vazio.</p>}
+            {Object.entries(cart).filter(([, n]) => n > 0).map(([id, n]) => { const p = P[+id - 1]; return (
+              <div key={id} className="flex gap-3 items-center"><div className="w-16 h-16 rounded-lg overflow-hidden shrink-0"><Art shape={p.shape} tone={p.tone} /></div>
+                <div className="flex-1"><p className="font-medium text-sm">{p.name}</p><p className="text-sm text-ink/60">{fmt(p.price)}</p></div>
+                <div className="flex items-center border border-ink/20 rounded-full text-sm"><button className="w-7 h-7" onClick={() => setCart({ ...cart, [id]: n - 1 })}>−</button><span className="w-5 text-center">{n}</span><button className="w-7 h-7" onClick={() => setCart({ ...cart, [id]: n + 1 })}>+</button></div></div>); })}
+          </div>
+          <div className="border-t border-sand pt-4"><div className="flex justify-between text-lg mb-3"><span>Total</span><b>{fmt(total)}</b></div>
+            <button disabled={!count} className="w-full py-3 rounded-full bg-ink text-cream disabled:opacity-40">Finalizar (demonstração)</button></div>
+        </aside></div>}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(<App />);
+</script>
+<script>
+try {
+  var out = Babel.transform(document.getElementById('app-src').textContent, {
+    filename: 'app.tsx',
+    presets: [['typescript', { isTSX: true, allExtensions: true }], 'react']
+  }).code;
+  (0, eval)(out);
+} catch (e) {
+  document.getElementById('root').innerHTML = '<pre style="padding:24px;white-space:pre-wrap">Erro ao carregar: ' + e.message + '</pre>';
+  console.error(e);
+}
+</script>
+</body>
+</html>
